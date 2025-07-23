@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Health Scheduler Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f6f8fa;
+      margin: 0;
+      color: #222;
+    }
+    .top-bar {
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .top-bar .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .top-bar .logo img {
+      width: 48px;
+      height: 48px;
+    }
+    .top-bar .logo span {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2e7d32;
+      letter-spacing: 1px;
+    }
+    .top-bar .menu-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .menu-button {
+      background: #e0f2f1;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .menu-button span {
+      display: block;
+      width: 24px;
+      height: 3px;
+      background: #2e7d32;
+      margin: 3px 0;
+      border-radius: 2px;
+    }
+    .customization-box {
+      display: none;
+      position: absolute;
+      top: 80px;
+      right: 32px;
+      width: 260px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      padding: 24px;
+      z-index: 100;
+    }
+    .customization-box h4 {
+      margin: 0 0 16px 0;
+      font-size: 1.1rem;
+      color: #2e7d32;
+      font-weight: 600;
+      text-align: center;
+    }
+    .customization-box button,
+    .customization-box select {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      background: #e0f2f1;
+      color: #222;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .customization-box button:hover {
+      background: #b2dfdb;
+    }
+    .customization-box .close-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ffebee;
+      color: #c62828;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .container {
+      display: flex;
+      max-width: 1200px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      overflow: hidden;
+      min-height: 700px;
+    }
+    .sidebar {
+      background: #e0f2f1;
+      width: 280px;
+      padding: 32px 24px;
+      border-right: 1px solid #b2dfdb;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .sidebar h3 {
+      font-size: 1.1rem;
+      color: #2e7d32;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      text-decoration: none;
+      color: #222;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .sidebar a:hover {
+      background: #b2dfdb;
+    }
+    .sidebar img {
+      width: 32px;
+      height: 32px;
+    }
+    .new-chat-button {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .new-chat-button:hover {
+      background: #388e3c;
+    }
+    .chats-container {
+      max-height: 220px;
+      overflow-y: auto;
+      margin-top: 8px;
+      padding-right: 4px;
+    }
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 40px 48px;
+      background: #fafafa;
+      position: relative;
+    }
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .chat-message {
+      max-width: 70%;
+      padding: 16px 20px;
+      border-radius: 16px;
+      font-size: 1rem;
+      box-shadow: 0 2px 8px rgba(46,125,50,0.06);
+      margin-bottom: 0;
+      word-break: break-word;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+    }
+    .user-message {
+      align-self: flex-end;
+      background: #c8e6c9;
+      border-radius: 16px 16px 4px 16px;
+    }
+    .chatbot-message {
+      align-self: flex-start;
+      background: #e3f2fd;
+      border-radius: 16px 16px 16px 4px;
+    }
+    .empty-chat-message {
+      text-align: center;
+      color: #888;
+      font-style: italic;
+      margin-top: 32px;
+      font-size: 1.1rem;
+    }
+    .user-input {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 16px 24px;
+      position: absolute;
+      bottom: 32px;
+      left: 48px;
+      right: 48px;
+    }
+    .user-input input {
+      flex: 1;
+      border: 1px solid #b2dfdb;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 1rem;
+      background: #f6f8fa;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .user-input input:focus {
+      border: 1.5px solid #2e7d32;
+    }
+    .user-input button {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-input button:hover {
+      background: #388e3c;
+    }
+    .user-input img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #e0f2f1;
+      padding: 4px;
+    }
+    .loading-spinner {
+      text-align: center;
+      color: #888;
+      padding: 16px;
+      font-size: 1rem;
+    }
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        min-height: 0;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #b2dfdb;
+        flex-direction: row;
+        gap: 16px;
+        padding: 16px;
+      }
+      .chat-window {
+        padding: 24px 8px 80px 8px;
+      }
+      .user-input {
+        left: 8px;
+        right: 8px;
+        bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="logo">
+      <span class="main-title">cicadaAI</span>
+    </div>
+    <div class="menu-container">
+      <button class="menu-button" onclick="toggleCustomizationBox()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="customization-box" id="customization-box">
+        <h4>Settings</h4>
+        <button onclick="toggleDarkMode()">Dark Mode</button>
+        <select onchange="changeLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+        </select>
+        <button onclick="location.href='index.html'">Log Off</button>
+        <button class="close-button" onclick="toggleCustomizationBox()">×</button>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="sidebar">
+      <section>
+        <h3>Menu</h3>
+        <a href="about.html">About</a>
+        <a href="faq.html">FAQ</a>
+      </section>
+      <section>
+        <h3>Appointments</h3>
+        <button id="new-chat-btn" class="new-chat-button">New Appointment</button>
+        <div class="chats-container">
+          <div id="previous-chats-list">
+            <div class="loading-spinner">Loading appointments...</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="chat-window">
+      <div class="chat-history" id="chat-history">
+        <div class="empty-chat-message" id="empty-chat-message">
+          Start a new appointment or select a previous conversation
+        </div>
+      </div>
+      <div class="user-input">
+        <img src="/images/user_avatar.png" alt="User">
+        <input type="text" id="user-input" placeholder="Type your health question or appointment request...">
+        <button id="send-button">Send</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Toggle customization box
+    function toggleCustomizationBox() {
+      const box = document.getElementById('customization-box');
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    }
+    // Check if user is logged in when page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/check-login');
+        const data = await response.json();
+        if (data.loggedIn) {
+          initializeChat(data.userId);
+        } else {
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+      }
+    });
+    // New appointment button
+    document.getElementById('new-chat-btn').addEventListener('click', async () => {
+      await createNewChat();
+      document.getElementById('chat-history').innerHTML = '';
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'empty-chat-message';
+      emptyMessage.textContent = 'New appointment started';
+      document.getElementById('chat-history').appendChild(emptyMessage);
+    });
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
