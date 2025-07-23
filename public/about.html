@@ -1,102 +1,276 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>About</title>
-<style>
-@font-face {
-  font-family: 'Georgia';
-  src: url('/fonts/Good_Old_DOS.ttf') 
-  format('truetype'); /* Ensure the format is specified for better browser support */
-  font-weight: bold;
-}
-
-
-  body {
-  /* Set the font to monospace for a retro look */
-  font-family: 'GoodOld';
-  /* Set the background color to a light gray */
-  background-color: #BFBFBF; 
-  /* Set the default text color to dark gray */
-  color: #333;
-  /* Add margin to the page content */
-  margin: 20px;
-  /* Add a thick, solid border around the page content */
-  border: 10px solid #333;
-  /* Center align all text content within the body */
-  text-align: center; 
-}
-  .box{
-    background-color: #BFBFBF; 
-  }
-
-h1 {
-  /* Set the font for h1 headings to Courier New (or a similar monospace font) */
-  font-family: 'GoodOld';
-  /* Underline the h1 headings */
-  text-decoration: underline;
-  /* Add margin to the bottom of h1 headings */
-  margin-bottom: 30px;
-}
-
-ul {
-  
-  /* Use square bullets for the unordered list */
-  list-style-type: square; 
-  /* Make the list an inline-block to allow centering */
-  display: inline-block; 
-  /* Left align the list items within the centered list */
-  text-align: left; 
-}
-
-nav { 
-  /* Set the background color of the navigation bar to dark gray */
-  background-color: #333; 
-  /* Add padding to the navigation bar */
-  padding: 10px; 
-  /* Fix the position of the navigation bar to the bottom of the viewport */
-  position: fixed; 
-  /* Position the navigation bar at the bottom */
-  bottom: 0; 
-  /* Position the navigation bar to the left */
-  left: 0;
-  /* Make the navigation bar take up the full width of the viewport */
-  width: 100%; 
-}
-
-nav a {
-  /* Set the text color of the navigation links to a light gray */
-  color: #eee; 
-  /* Remove the underline from the navigation links */
-  text-decoration: none;
-  /* Add margin to the left and right of the navigation links */
-  margin: 0 15px; 
-  /* Make the navigation link text bold */
-  font-weight: bold;
-}
-</style>
+  <title>About cicadaAI Health Scheduler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f6f8fa;
+      margin: 0;
+      color: #222;
+    }
+    .top-bar {
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .top-bar .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .top-bar .logo span {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2e7d32;
+      letter-spacing: 1px;
+    }
+    .top-bar .menu-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .menu-button {
+      background: #e0f2f1;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .menu-button span {
+      display: block;
+      width: 24px;
+      height: 3px;
+      background: #2e7d32;
+      margin: 3px 0;
+      border-radius: 2px;
+    }
+    .customization-box {
+      display: none;
+      position: absolute;
+      top: 80px;
+      right: 32px;
+      width: 260px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      padding: 24px;
+      z-index: 100;
+    }
+    .customization-box h4 {
+      margin: 0 0 16px 0;
+      font-size: 1.1rem;
+      color: #2e7d32;
+      font-weight: 600;
+      text-align: center;
+    }
+    .customization-box button,
+    .customization-box select {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      background: #e0f2f1;
+      color: #222;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .customization-box button:hover {
+      background: #b2dfdb;
+    }
+    .customization-box .close-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ffebee;
+      color: #c62828;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .container {
+      display: flex;
+      max-width: 1200px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      overflow: hidden;
+      min-height: 700px;
+    }
+    .sidebar {
+      background: #e0f2f1;
+      width: 280px;
+      padding: 32px 24px;
+      border-right: 1px solid #b2dfdb;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .sidebar h3 {
+      font-size: 1.1rem;
+      color: #2e7d32;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      text-decoration: none;
+      color: #222;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .sidebar a:hover {
+      background: #b2dfdb;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+      padding: 40px 48px;
+      position: relative;
+    }
+    .about-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(46,125,50,0.06);
+      padding: 32px 40px;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .about-card h1 {
+      color: #2e7d32;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .about-card p {
+      font-size: 1.08rem;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+    .about-card ul {
+      list-style-type: square;
+      margin: 0 0 18px 24px;
+      padding: 0;
+      font-size: 1.08rem;
+    }
+    .about-card li {
+      margin-bottom: 8px;
+    }
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        min-height: 0;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #b2dfdb;
+        flex-direction: row;
+        gap: 16px;
+        padding: 16px;
+      }
+      .main-content {
+        padding: 24px 8px;
+      }
+      .about-card {
+        padding: 24px 8px;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<h1>About This Chatbot</h1>
-
-<p>This chatbot is a demonstration of the capabilities of Google Gemini, a large language model developed by Google AI. It is designed to provide information, answer questions, and engage in conversation.</p>
-
-<p>The chatbot is still under development, but it can already perform a variety of tasks, including:</p>
-
-<ul>
-  <li>Answering general knowledge questions</li>
-  <li>Providing definitions and explanations</li>
-  <li>Generating creative text formats, like poems, code, scripts, musical pieces, email, letters, etc.</li>
-  <li>Translating languages</li>
-  <li>Summarizing factual topics or creating stories</li>
-</ul>
-
-<p>Some features are not yet functional but we are constantly working to improve the chatbot's abilities and expand its knowledge base.We hope you find it informative and entertaining.</p>
-
-<nav> 
-  <a href="chat_bot.html">Chat Bot</a> | 
-  <a href="faq.html">FAQ</a> 
-</nav>
-
+  <div class="top-bar">
+    <div class="logo">
+      <span class="main-title">cicadaAI</span>
+    </div>
+    <div class="menu-container">
+      <button class="menu-button" onclick="toggleCustomizationBox()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="customization-box" id="customization-box">
+        <h4>Settings</h4>
+        <button onclick="toggleDarkMode()">Dark Mode</button>
+        <select onchange="changeLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+        </select>
+        <button onclick="location.href='index.html'">Home</button>
+        <button class="close-button" onclick="toggleCustomizationBox()">×</button>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="sidebar">
+      <section>
+        <h3>Menu</h3>
+        <a href="about.html">About</a>
+        <a href="faq.html">FAQ</a>
+      </section>
+      <section>
+        <h3>Appointments</h3>
+        <a href="chat_bot.html">Go to Chatbot</a>
+      </section>
+    </div>
+    <div class="main-content">
+      <div class="about-card">
+        <h1>About cicadaAI Health Scheduler</h1>
+        <p>
+          cicadaAI is a modern health scheduler and AI assistant designed to help you manage appointments, answer health-related questions, and provide support for your well-being.
+        </p>
+        <p>
+          Powered by advanced AI, cicadaAI can:
+        </p>
+        <ul>
+          <li>Schedule and manage health appointments</li>
+          <li>Answer general health and wellness questions</li>
+          <li>Provide definitions, explanations, and summaries</li>
+        </ul>
+        <p>
+          We are constantly improving cicadaAI to expand its capabilities and provide a seamless experience for users. Your feedback helps us grow!
+        </p>
+      </div>
+    </div>
+  </div>
+  <script>
+    function toggleCustomizationBox() {
+      const box = document.getElementById('customization-box');
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    }
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+    function changeLanguage(lang) {
+      // Placeholder for language change logic
+    }
+  </script>
 </body>
 </html>

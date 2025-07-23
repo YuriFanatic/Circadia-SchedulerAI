@@ -3,183 +3,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Our Website</title>
+    <title>Circadia SchedulerAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Times New Roman', Times, serif;
-            background-color: #f0f0f0;
-            color: #000;
-            line-height: 1.6;
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f6f8fa;
             margin: 0;
-            padding: 0;
+            color: #222;
+        }
+        .top-bar {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 72px;
+        }
+        .top-bar .logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .top-bar .logo span {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2e7d32;
+            letter-spacing: 1px;
+        }
+        .top-bar .menu-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .menu-button {
+            background: #e0f2f1;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .menu-button span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #2e7d32;
+            margin: 3px 0;
+            border-radius: 2px;
+        }
+        .customization-box {
+            display: none;
+            position: absolute;
+            top: 80px;
+            right: 32px;
+            width: 260px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            padding: 24px;
+            z-index: 100;
+        }
+        .customization-box h4 {
+            margin: 0 0 16px 0;
+            font-size: 1.1rem;
+            color: #2e7d32;
+            font-weight: 600;
             text-align: center;
         }
-        header {
-            background: #000080;
-            color: #ffffff;
+        .customization-box button,
+        .customization-box select {
+            width: 100%;
+            margin-bottom: 12px;
             padding: 10px;
-            text-align: center;
-            border-bottom: 3px solid #ffcc00;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            background: #e0f2f1;
+            color: #222;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: inline-block;
+        .customization-box button:hover {
+            background: #b2dfdb;
         }
-        nav ul li {
-            display: inline;
-            margin: 0 15px;
+        .customization-box .close-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1.1rem;
+            cursor: pointer;
         }
-        nav ul li a {
-            color: #ffcc00;
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 32px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            overflow: hidden;
+            min-height: 700px;
+        }
+        .sidebar {
+            background: #e0f2f1;
+            width: 280px;
+            padding: 32px 24px;
+            border-right: 1px solid #b2dfdb;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .sidebar h3 {
+            font-size: 1.1rem;
+            color: #2e7d32;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
             text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
+            color: #222;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: background 0.2s;
         }
-        nav ul li a:hover {
-            text-decoration: underline;
+        .sidebar a:hover {
+            background: #b2dfdb;
         }
-        .form-section {
-            background: #ffffff;
-            border: 2px solid #000080;
-            margin: 20px auto;
-            padding: 20px;
-            width: 300px;
-            text-align: left;
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafafa;
+            padding: 40px 48px;
+            position: relative;
         }
-        .form-section h2 {
-            color: #000080;
+        .form-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(46,125,50,0.06);
+            padding: 32px 40px;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .form-card h2 {
+            color: #2e7d32;
             text-align: center;
-            font-size: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 24px;
         }
         label {
-            font-weight: bold;
+            font-weight: 500;
             display: block;
-            margin-top: 10px;
+            margin-top: 16px;
+            margin-bottom: 6px;
+            color: #222;
         }
         input[type="text"],
         input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #000;
-            background: #f0f0f0;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #b2dfdb;
+            border-radius: 8px;
+            background: #f6f8fa;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border: 1.5px solid #2e7d32;
         }
         button {
-            background: #000080;
-            color: #ffffff;
-            padding: 10px;
+            background: #2e7d32;
+            color: #fff;
+            padding: 12px;
             border: none;
             margin-top: 15px;
             cursor: pointer;
             width: 100%;
-            font-size: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: background 0.2s;
         }
         button:hover {
-            background: #ffcc00;
-            color: #000;
+            background: #388e3c;
         }
         .message {
             margin-top: 10px;
-            font-weight: bold;
+            font-weight: 500;
             text-align: center;
         }
         .error-message {
-            color: #ff0000;
+            color: #c62828;
         }
         .success-message {
-            color: #008000;
+            color: #2e7d32;
+        }
+        .switch-form {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 0.98rem;
+        }
+        .switch-form a {
+            color: #2e7d32;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                min-height: 0;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #b2dfdb;
+                flex-direction: row;
+                gap: 16px;
+                padding: 16px;
+            }
+            .main-content {
+                padding: 24px 8px;
+            }
+            .form-card {
+                padding: 24px 8px;
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Our Website</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="faq.html">FAQ</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <section id="login" class="form-section">
-        <h2>Login</h2>
-        <form id="login-form">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required><br>
-            
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br>
-            
-            <button type="button" onclick="handleLogin()">Login</button>
-        </form>
-        <p id="login-message" class="message"></p>
-    </section>
-
-    <section id="register" class="form-section">
-        <h2>Register</h2>
-        <form id="register-form">
-            <label for="reg-username">Username:</label>
-            <input type="text" id="reg-username" name="username" required><br>
-            
-            <label for="reg-password">Password:</label>
-            <input type="password" id="reg-password" name="password" required><br>
-
-            <label for="reg-confirm-password">Confirm Password:</label>
-            <input type="password" id="reg-confirm-password" name="confirm-password" required><br>
-            
-            <button type="button" onclick="handleRegister()">Register</button>
-        </form>
-        <p id="register-message" class="message"></p>
-    </section>
-
+    <div class="top-bar">
+        <div class="logo">
+            <span class="main-title">cicadaAI</span>
+        </div>
+        <div class="menu-container">
+            <button class="menu-button" onclick="toggleCustomizationBox()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="customization-box" id="customization-box">
+                <h4>Settings</h4>
+                <button onclick="toggleDarkMode()">Dark Mode</button>
+                <select onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                </select>
+                <button onclick="location.href='index.html'">Home</button>
+                <button class="close-button" onclick="toggleCustomizationBox()">×</button>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <section>
+                <h3>Menu</h3>
+                <a href="about.html">About</a>
+                <a href="faq.html">FAQ</a>
+            </section>
+            <section>
+                <h3>Appointments</h3>
+                <a href="chat_bot.html">Go to Chatbot</a>
+            </section>
+        </div>
+        <div class="main-content">
+            <div class="form-card" id="login-section">
+                <h2 id="form-title">Login</h2>
+                <form id="login-form">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                    <button type="button" onclick="handleLogin()">Login</button>
+                </form>
+                <form id="register-form" style="display:none;">
+                    <label for="reg-username">Username</label>
+                    <input type="text" id="reg-username" name="username" required>
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" name="password" required>
+                    <label for="reg-confirm-password">Confirm Password</label>
+                    <input type="password" id="reg-confirm-password" name="confirm-password" required>
+                    <button type="button" onclick="handleRegister()">Register</button>
+                </form>
+                <p id="form-message" class="message"></p>
+                <div class="switch-form" id="switch-form">
+                    <span id="switch-to-register">Don't have an account? <a onclick="showRegister()">Register</a></span>
+                    <span id="switch-to-login" style="display:none;">Already have an account? <a onclick="showLogin()">Login</a></span>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
+        // Toggle customization box
+        function toggleCustomizationBox() {
+            const box = document.getElementById('customization-box');
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        }
+        // Switch between login/register forms
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('form-title').textContent = 'Register';
+            document.getElementById('form-message').textContent = '';
+            document.getElementById('switch-to-register').style.display = 'none';
+            document.getElementById('switch-to-login').style.display = 'inline';
+        }
+        function showLogin() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('form-title').textContent = 'Login';
+            document.getElementById('form-message').textContent = '';
+            document.getElementById('switch-to-register').style.display = 'inline';
+            document.getElementById('switch-to-login').style.display = 'none';
+        }
         // Check login status when page loads
         document.addEventListener('DOMContentLoaded', checkLoginStatus);
-
         async function checkLoginStatus() {
             try {
                 const response = await fetch('/check-login');
                 const data = await response.json();
                 if (data.loggedIn) {
-                    // If already logged in, redirect to chat
                     window.location.href = "/chat_bot.html";
                 }
             } catch (error) {
                 console.error('Error checking login status:', error);
             }
         }
-
         async function handleLogin() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
-            const messageElement = document.getElementById("login-message");
-
+            const messageElement = document.getElementById("form-message");
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password }),
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
-                    // Store user info in localStorage for chat functionality
                     localStorage.setItem('userId', data.userId);
                     localStorage.setItem('username', data.username);
-                    
-                    // Show success message before redirect
                     messageElement.textContent = "Login successful! Redirecting...";
                     messageElement.classList.remove("error-message");
                     messageElement.classList.add("success-message");
-
-                    // Redirect to the chatbot page after a brief delay
                     setTimeout(() => {
                         window.location.href = "/chat_bot.html";
                     }, 1000);
@@ -195,39 +382,30 @@
                 messageElement.classList.add("error-message");
             }
         }
-
         async function handleRegister() {
             const username = document.getElementById("reg-username").value;
             const password = document.getElementById("reg-password").value;
             const confirmPassword = document.getElementById("reg-confirm-password").value;
-            const messageElement = document.getElementById("register-message");
-
+            const messageElement = document.getElementById("form-message");
             if (password !== confirmPassword) {
                 messageElement.textContent = "Registration failed: Passwords do not match";
                 messageElement.classList.remove("success-message");
                 messageElement.classList.add("error-message");
                 return;
             }
-
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password }),
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     messageElement.textContent = "Registration successful. Please login.";
                     messageElement.classList.remove("error-message");
                     messageElement.classList.add("success-message");
-                    // Clear registration form
                     document.getElementById("register-form").reset();
-                    // Scroll to login section
-                    document.getElementById("login").scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(showLogin, 1200);
                 } else {
                     messageElement.textContent = data.message || "Registration failed: User already exists";
                     messageElement.classList.remove("success-message");
@@ -240,7 +418,6 @@
                 messageElement.classList.add("error-message");
             }
         }
-
         // Add event listeners for Enter key
         document.getElementById("login-form").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
@@ -248,13 +425,16 @@
                 handleLogin();
             }
         });
-
         document.getElementById("register-form").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 handleRegister();
             }
         });
+        // Optional: Dark mode toggle (simple)
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
     </script>
 </body>
 </html>
