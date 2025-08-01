@@ -18,7 +18,7 @@ function showErrorMessage(message) {
     errorDiv.classList.add('error-message');
     errorDiv.textContent = message;
     chatHistory.appendChild(errorDiv);
-    
+
     // Remove the error message after 5 seconds
     setTimeout(() => {
         errorDiv.remove();
@@ -64,7 +64,7 @@ async function sendMessage() {
 
     const message = userInput.value;
     if (!message.trim()) return;
-    
+
     userInput.value = '';
 
     const userMessageDiv = document.createElement("div");
@@ -76,20 +76,20 @@ async function sendMessage() {
         await saveMessage('user', message);
 
         const loadingDiv = document.createElement("div");
-        loadingDiv.classList.add("chat-message", "chatbot-message", "loading");    
+        loadingDiv.classList.add("chat-message", "chatbot-message", "loading");
         loadingDiv.innerHTML = `<b>ChatBot:</b> <span class="typing-indicator">Thinking...</span>`;
         chatHistory.appendChild(loadingDiv);
 
         const apiResponse = await fetchAPIResponse(message, responseCache);
         loadingDiv.remove();
-        
+
         const chatbotMessageDiv = document.createElement("div");
         chatbotMessageDiv.classList.add("chat-message", "chatbot-message");
         chatbotMessageDiv.innerHTML = `<b>ChatBot:</b> <span id="typing-text"></span>`;
         chatHistory.appendChild(chatbotMessageDiv);
 
         await saveMessage('chatbot', apiResponse);
-        
+
         // Typing effect
         await typeResponse(apiResponse, chatbotMessageDiv.querySelector("#typing-text"));
 
@@ -170,7 +170,7 @@ async function loadPreviousChats() {
 
         const response = await fetch(`/api/get-user-chats/${currentUserId}`);
         const chats = await response.json();
-        
+
         const chatsContainer = document.querySelector('.chats-container');
         chatsContainer.innerHTML = '';
 
@@ -198,16 +198,16 @@ async function loadChat(chatId) {
         if (!response.ok) {
             throw new Error('Failed to fetch chat messages');
         }
-        
+
         const messages = await response.json();
         currentChatId = chatId;
-        
+
         chatHistory.innerHTML = '';
 
         messages.forEach(msg => {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('chat-message');
-            
+
             if (msg.role === 'user') {
                 messageDiv.classList.add('user-message');
                 messageDiv.innerHTML = `<b>You:</b> ${msg.message_content}`;
@@ -215,7 +215,7 @@ async function loadChat(chatId) {
                 messageDiv.classList.add('chatbot-message');
                 messageDiv.innerHTML = `<b>ChatBot:</b> ${msg.message_content}`;
             }
-            
+
             chatHistory.appendChild(messageDiv);
         });
 
@@ -256,7 +256,7 @@ function generateCacheKey(userMessage, conversationHistory) {
 async function fetchAPIResponse(userMessage, conversationHistory) {
     const cacheKey = generateCacheKey(userMessage, conversationHistory);
     if (responseCache.has(cacheKey)) {
-        return responseCache.get(cacheKey); 
+        return responseCache.get(cacheKey);
     }
 
     try {
@@ -282,11 +282,11 @@ async function fetchAPIResponse(userMessage, conversationHistory) {
 
         const data = await response.json();
         console.log(data);
-        
+
         if (!response.ok) {
             throw new Error(data.error?.message || "API request failed");
         }
-        
+
         const apiResponseText = data?.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, '$1');
         responseCache.set(cacheKey, apiResponseText);
         return apiResponseText;
@@ -307,7 +307,17 @@ function toggleCustomizationBox() {
 }
 
 function toggleDarkMode() {
-    // Implementation needed
+    const body = document.body;
+
+    // Toggle the 'dark-mode' class on the body element
+    body.classList.toggle('dark-mode');
+
+    // Optional: Save the user preference to localStorage
+    if (body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+    } else {
+        localStorage.setItem('theme', 'light');
+    }
 }
 
 function changeLanguage(lang) {
