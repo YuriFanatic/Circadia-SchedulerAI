@@ -11,9 +11,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // MySQL Connection
 const db = mysql.createConnection({
-    host: 'localhost',
+    host: '127.0.0.1',
     user: 'root',
-    password: 'password', // replace with your MySQL password
+    password: 'California408!', // replace with your MySQL password
     database: 'user_demo'
 });
 
@@ -138,4 +138,106 @@ app.get('/api/get-chat-messages/:chatId', (req, res) => {
 // Start Server
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
+});
+
+
+
+// Added three new routes
+
+
+// Route to extract features for today's schedule:
+app.get('/api/features/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const query = `
+        SELECT      
+            COUNT(*) AS num_events,
+            AVG(TIMESTAMPDIFF(MINUTE, start_time, end_time)) AS avg_duration,
+            TIMESTAMPDIFF(MINUTE, MIN(start_time), MAX(end_time)) AS time_span,
+            SUM(is_priority = 1) AS num_priority_events,
+            SUM(is_priority = 0) AS num_non_priority_events
+        FROM scheduled_events
+        WHERE user_id = ? AND DATE(start_time) = ?
+    `;
+
+    db.query(query, [userId, today], (err, result) => {
+        if (err) {
+            console.log('Error computing features:', err);
+            return res.status(500).json({ error: 'Failed to compute features' });
+        }
+        res.json(result[0]);
+    });
+});
+
+// Route to save an event:
+app.post('/api/save-event', (req, res) => {
+    const {user_id, title, start_time, end_time, is_priority } = req.body;
+
+    console.log("Incoming event payload:", { user_id, title, start_time, end_time, is_priority });
+    if (!title || !start_time || !end_time) {
+        console.error("Missing required fields.");
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+    const query = `
+        INSERT INTO scheduled_events (user_id, title, start_time, end_time, is_priority)
+        VALUES(?, ?, ?, ?, ?)
+    `;
+
+
+    db.query(query, [user_id || 1, title, start_time, end_time, is_priority ? 1 : 0], (err, result) => {
+        if (err) {
+            console.error("Error saving event:", err);
+            return res.status(500).json({ error: "Failed to save event" });
+        }
+        res.json({ success: true, event_id: result.insertId });
+    });
+});
+
+
+
+// issue might be here when changing the dummy logic
+// Compute score 
+const { spawn } = require('child_process');
+
+app.post('/api/compute-score', async (req, res) => {
+    const { user_id } = req.body;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const query = `
+        SELECT 
+            COUNT(*) AS num_events,
+            AVG(TIMESTAMPDIFF(MINUTE, start_time, end_time)) AS avg_duration,
+            TIMESTAMPDIFF(MINUTE, MIN(start_time), MAX(end_time)) AS time_span,
+            SUM(is_priority = 1) AS num_priority_events,
+            SUM(is_priority = 0) AS num_non_priority_events
+        FROM scheduled_events
+        WHERE user_id = ? AND DATE(start_time) = ?
+    `;
+
+    db.query(query, [user_id, today], (err, results) => {
+        if (err || results.length === 0) {
+            console.error('DB Error:', err);
+            return res.status(500).json({ error: 'Failed to extract features' });
+        }
+
+        const features = results[0];
+        const py = spawn('python3', ['score_model.py']);
+        let output = '';
+
+        py.stdout.on('data', (data) => output += data.toString());
+        py.stderr.on('data', (err) => console.error("Model Error:", err.toString()));
+
+        py.on('close', () => {
+            try {
+                const prediction = JSON.parse(output);
+                res.json({ score: prediction.score, feedback: prediction.feedback || '' });
+            } catch (e) {
+                res.status(500).json({ error: 'Invalid model response' });
+            }
+        });
+
+        py.stdin.write(JSON.stringify(features));
+        py.stdin.end();
+    });
 });

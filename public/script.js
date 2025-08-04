@@ -4,6 +4,19 @@ const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 const responseCache = new Map(); // In-memory cache
 
+// Helper function to convert time to 24-hr format
+function convertTo24Hr(timeStr) {
+    const [time, modifier] = timeStr.toUpperCase().split(/(AM|PM)/);
+    let [hours, minutes] = time.split(':').map(Number);
+    if (!minutes) minutes = 0;
+
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+
 // Chat session management
 let currentChatId = null;
 let currentUserId = null;
@@ -51,8 +64,40 @@ userInput.addEventListener('keydown', (event) => {
     }
 });
 
+
+
+
+// fetch score and feedback 
+async function fetchScoreAndFeedback(userId) {
+    try {
+        const response = await fetch(`/api/compute-score`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to get score");
+
+        displayScoreFeedback(data.score, data.feedback);
+    } catch (error) {
+        console.error("Error fetching score:", error);
+        showErrorMessage("Failed to get schedule score feedback.");
+    }
+}
+function displayScoreFeedback(score, feedback) {
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("chat-message", "chatbot-message");
+    messageDiv.innerHTML = `<b>Schedule Score:</b> ${score}<br><b>Feedback:</b> ${feedback}`;
+    chatHistory.appendChild(messageDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+
 // Modified sendMessage function
-async function sendMessage() {
+async function sendMessage() { 
+
+
     if (!currentChatId) {
         try {
             await createNewChat();
@@ -101,7 +146,57 @@ async function sendMessage() {
         }
         showErrorMessage('Error: Failed to send message');
     }
+
+   
+    const apiResponse = await fetchAPIResponse(message, responseCache);
+
+    //  START of event parser
+    const events = [];
+    const lines = apiResponse.split('\n').filter(l => l.includes(':'));
+    lines.forEach(line => {
+        const [titlePart, timePart] = line.split(':');
+        const title = titlePart.trim().replace('*', '').trim();
+        const is_priority = line.toLowerCase().includes('(priority)');
+
+        const times = timePart.match(/(\d+)(:\d+)?\s*(AM|PM)/gi);
+        if (times && times.length === 2) {
+            const start = convertTo24Hr(times[0]);
+            const end = convertTo24Hr(times[1]);
+            const today = new Date().toISOString().split('T')[0];
+            const start_time = `${today}T${start}:00`;
+            const end_time = `${today}T${end}:00`;
+
+            events.push({ title, start_time, end_time, is_priority });
+        }
+    });
+    console.log("Parsed events:", events);
+
+    for (const event of events) {
+        const response = await fetch('/api/save-event', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: currentUserId,
+                title: event.title,
+                start_time: event.start_time,
+                end_time: event.end_time,
+                is_priority: event.is_priority ? 1 : 0
+            })
+        });
+
+        const result = await response.json();
+        console.log("Saved event:", result);
+    }
+
+
+    if (currentUserId) {
+        await fetchScoreAndFeedback(currentUserId);
+    }
+
 }
+
+
+
 
 // Function for typing effect
 async function typeResponse(responseText, container) {
@@ -253,6 +348,19 @@ function generateCacheKey(userMessage, conversationHistory) {
     return key;
 }
 
+
+
+const systemPrompt = `
+You are ScheduleBot, a smart assistant. Only accept scheduling commands that include:
+
+- A task title (e.g., "Doctor Appointment")
+- A start and end time (e.g., "9 AM to 10 AM")
+- If a certain task is a priority
+
+If the user does not include these, politely ask them to rephrase.
+Do not allow general chat or off-topic messages.
+`;
+
 async function fetchAPIResponse(userMessage, conversationHistory) {
     const cacheKey = generateCacheKey(userMessage, conversationHistory);
     if (responseCache.has(cacheKey)) {
@@ -275,7 +383,7 @@ async function fetchAPIResponse(userMessage, conversationHistory) {
                 },
                 systemInstruction: {
                     role: "model",
-                    parts: [{ text: "Your name is TechSupportAI. If the user greet you, greet back." }]
+                    parts: [{ text: systemPrompt }]
                 }
             }),
         });
@@ -323,3 +431,6 @@ function toggleDarkMode() {
 function changeLanguage(lang) {
     // Implementation needed
 }
+
+
+

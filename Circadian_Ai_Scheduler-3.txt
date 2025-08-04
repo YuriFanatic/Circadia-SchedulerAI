@@ -1,0 +1,571 @@
+!pip install datasets transformers seaborn plotly
+!pip install transformers dataset
+from huggingface_hub import notebook_login
+notebook_login()
+
+# Imports
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+# import function from datasets library for accessing and downloading data
+# sets from HuggingFace Hub
+from datasets import load_dataset
+
+# Login using e.g. `huggingface-cli login` to access this dataset
+splits = {'train': 'data/train-00000-of-00001.parquet', 'test': 'data/test-00000-of-00001.parquet'}
+df = pd.read_parquet("hf://datasets/xhlin0601/events-scheduling/" + splits["train"])
+
+
+
+
+# Accesses a specific split of loaded dataset - in this case the train splite
+# Converts into pandas DataFrame - convienent data structure for manipulation
+# and analysis
+#df = dataset["train"].to_pandas()
+
+# prints first five rows of newly created Data Frame - quick way to inspect
+# data loaded correctly
+df.head()
+
+# prints summary
+df.info()
+
+# Descriptive statistics of numerical columns
+df.describe()
+
+import pandas as pd
+import ast
+from datetime import timedelta
+import numpy as np
+
+# Step 1: Load dataset
+df = pd.read_parquet("hf://datasets/xhlin0601/events-scheduling/data/train-00000-of-00001.parquet")
+
+# Step 2: Preprocess event lists
+def parse_events(event_data):
+    """Convert numpy array of numpy arrays into a Python list of lists."""
+    if isinstance(event_data, np.ndarray):
+        # Convert outer numpy array to a list, and each inner numpy array to a list
+        return [list(item) for item in event_data]
+    elif isinstance(event_data, str):
+        # Fallback for string format
+        try:
+            return ast.literal_eval(event_data)
+        except (ValueError, SyntaxError):
+            print(f"Could not parse string data: {event_data}")
+            return [] # Return empty list or handle error as appropriate
+    else:
+        # Handle other potential types if necessary, or return empty list
+        print(f"Unexpected data type: {type(event_data)}")
+        return []
+
+# Apply the parsing function
+df['parsed_events'] = df['events'].apply(lambda x: parse_events(x))
+df['parsed_priorities'] = df['priority_events'].apply(lambda x: parse_events(x))
+
+# Helper: convert time strings to minutes
+def time_to_minutes(time_str):
+    if isinstance(time_str, str):
+        try:
+            h, m = map(int, time_str.split(':'))
+            return h * 60 + m
+        except ValueError:
+            print(f"Could not parse time string: {time_str}")
+            return None # Handle cases where time string is invalid
+    return None # Handle non-string inputs
+
+
+# Step 3: Calculate requested features
+num_events = []
+avg_durations = []
+num_priority = []
+day_spans = []
+
+for index, row in df.iterrows():
+    events = row['parsed_events']
+    priority_events = row['parsed_priorities']
+
+    # Number of events
+    num_e = len(events) if isinstance(events, list) else 0
+    num_events.append(num_e)
+
+    # Number of priority events
+    num_p = len(priority_events) if isinstance(priority_events, list) else 0
+    num_priority.append(num_p)
+
+    # Calculate durations, start times, and end times
+    durations = []
+    start_times = []
+    end_times = []
+
+    if isinstance(events, list):
+        for event in events:
+            if isinstance(event, list) and len(event) >= 3: # Ensure event has name, start, and end
+                start_time_str = event[1]
+                end_time_str = event[2]
+
+                start_min = time_to_minutes(start_time_str)
+                end_min = time_to_minutes(end_time_str)
+
+                if start_min is not None and end_min is not None:
+                    # Handle cases where end time might be on the next day (e.g., 23:00 -> 01:00)
+                    if end_min < start_min:
+                        duration = (24 * 60 - start_min) + end_min
+                    else:
+                        duration = end_min - start_min
+                    durations.append(duration)
+                    start_times.append(start_min)
+                    end_times.append(end_min)
+
+
+    # Average duration
+    avg_dur = np.mean(durations) if durations else 0
+    avg_durations.append(avg_dur)
+
+    # Day span
+    day_span = 0
+    if start_times and end_times:
+        min_start = min(start_times)
+        max_end = max(end_times)
+        # Consider day span across midnight if necessary - assuming events are within a 24h period for simplicity here
+        # A more robust solution might need to handle dates
+        day_span = max_end - min_start
+
+
+    day_spans.append(day_span)
+
+
+# Step 4: Create a new DataFrame with the calculated features and optimal score
+df_features = pd.DataFrame({
+    'num_events': num_events,
+    'num_priority': num_priority,
+    'avg_durations': avg_durations,
+    'day_spans': day_spans,
+    "optimal_score": df["optimal_score"] # Include the optimal score
+})
+
+# Step 5: Display the DataFrame with features for all rows
+display(df_features)
+
+
+
+X = df_features.drop('optimal_score', axis=1)
+y = df_features['optimal_score']
+
+# Step 1: Load dataset
+df = pd.read_parquet("hf://datasets/xhlin0601/events-scheduling/data/train-00000-of-00001.parquet")
+
+# Step 2: Preprocess event lists
+def parse_events(event_data):
+    """Convert numpy array of numpy arrays into a Python list of lists."""
+    if isinstance(event_data, np.ndarray):
+        # Convert outer numpy array to a list, and each inner numpy array to a list
+        return [list(item) for item in event_data]
+    elif isinstance(event_data, str):
+        # Fallback for string format
+        try:
+            return ast.literal_eval(event_data)
+        except (ValueError, SyntaxError):
+            print(f"Could not parse string data: {event_data}")
+            return [] # Return empty list or handle error as appropriate
+    else:
+        # Handle other potential types if necessary, or return empty list
+        print(f"Unexpected data type: {type(event_data)}")
+        return []
+
+# Apply the parsing function
+df['parsed_events'] = df['events'].apply(lambda x: parse_events(x))
+df['parsed_priorities'] = df['priority_events'].apply(lambda x: parse_events(x))
+
+# Helper: convert time strings to minutes
+def time_to_minutes(time_str):
+    if isinstance(time_str, str):
+        try:
+            h, m = map(int, time_str.split(':'))
+            return h * 60 + m
+        except ValueError:
+            print(f"Could not parse time string: {time_str}")
+            return None # Handle cases where time string is invalid
+    return None # Handle non-string inputs
+
+
+# Step 3: Calculate requested features
+num_events = []
+avg_durations = []
+num_priority = []
+day_spans = []
+
+for index, row in df.iterrows():
+    events = row['parsed_events']
+    priority_events = row['parsed_priorities']
+
+    # Number of events
+    num_e = len(events) if isinstance(events, list) else 0
+    num_events.append(num_e)
+
+    # Number of priority events
+    num_p = len(priority_events) if isinstance(priority_events, list) else 0
+    num_priority.append(num_p)
+
+    # Calculate durations, start times, and end times
+    durations = []
+    start_times = []
+    end_times = []
+
+    if isinstance(events, list):
+        for event in events:
+            if isinstance(event, list) and len(event) >= 3: # Ensure event has name, start, and end
+                start_time_str = event[1]
+                end_time_str = event[2]
+
+                start_min = time_to_minutes(start_time_str)
+                end_min = time_to_minutes(end_time_str)
+
+                if start_min is not None and end_min is not None:
+                    # Handle cases where end time might be on the next day (e.g., 23:00 -> 01:00)
+                    if end_min < start_min:
+                        duration = (24 * 60 - start_min) + end_min
+                    else:
+                        duration = end_min - start_min
+                    durations.append(duration)
+                    start_times.append(start_min)
+                    end_times.append(end_min)
+
+
+    # Average duration
+    avg_dur = np.mean(durations) if durations else 0
+    avg_durations.append(avg_dur)
+
+    # Day span
+    day_span = 0
+    if start_times and end_times:
+        min_start = min(start_times)
+        max_end = max(end_times)
+        # Consider day span across midnight if necessary - assuming events are within a 24h period for simplicity here
+        # A more robust solution might need to handle dates
+        day_span = max_end - min_start
+
+
+    day_spans.append(day_span)
+
+
+# Step 4: Create a new DataFrame with the calculated features and optimal score
+df_features = pd.DataFrame({
+    'num_events': num_events,
+    'num_priority': num_priority,
+    'avg_durations': avg_durations,
+    'day_spans': day_spans,
+    "optimal_score": df["optimal_score"] # Include the optimal score
+})
+
+# Step 5: Separate features (X) and target variable (y)
+X = df_features.drop('optimal_score', axis=1)
+y = df_features['optimal_score']
+
+# Display the first few rows of X and y to verify
+display(X.head())
+display(y.head())
+
+import pandas as pd
+import ast
+from datetime import timedelta
+import numpy as np
+
+# Step 1: Load dataset
+df = pd.read_parquet("hf://datasets/xhlin0601/events-scheduling/data/train-00000-of-00001.parquet")
+
+# Step 2: Preprocess event lists
+def parse_events(event_data):
+    """Convert numpy array of numpy arrays into a Python list of lists."""
+    if isinstance(event_data, np.ndarray):
+        # Convert outer numpy array to a list, and each inner numpy array to a list
+        return [list(item) for item in event_data]
+    elif isinstance(event_data, str):
+        # Fallback for string format
+        try:
+            return ast.literal_eval(event_data)
+        except (ValueError, SyntaxError):
+            print(f"Could not parse string data: {event_data}")
+            return [] # Return empty list or handle error as appropriate
+    else:
+        # Handle other potential types if necessary, or return empty list
+        print(f"Unexpected data type: {type(event_data)}")
+        return []
+
+# Apply the parsing function
+df['parsed_events'] = df['events'].apply(lambda x: parse_events(x))
+df['parsed_priorities'] = df['priority_events'].apply(lambda x: parse_events(x))
+
+# Helper: convert time strings to minutes
+def time_to_minutes(time_str):
+    if isinstance(time_str, str):
+        try:
+            h, m = map(int, time_str.split(':'))
+            return h * 60 + m
+        except ValueError:
+            print(f"Could not parse time string: {time_str}")
+            return None # Handle cases where time string is invalid
+    return None # Handle non-string inputs
+
+
+# Step 3: Calculate requested features
+num_events = []
+avg_durations = []
+num_priority = []
+day_spans = []
+
+for index, row in df.iterrows():
+    events = row['parsed_events']
+    priority_events = row['parsed_priorities']
+
+    # Number of events
+    num_e = len(events) if isinstance(events, list) else 0
+    num_events.append(num_e)
+
+    # Number of priority events
+    num_p = len(priority_events) if isinstance(priority_events, list) else 0
+    num_priority.append(num_p)
+
+    # Calculate durations, start times, and end times
+    durations = []
+    start_times = []
+    end_times = []
+
+    if isinstance(events, list):
+        for event in events:
+            if isinstance(event, list) and len(event) >= 3: # Ensure event has name, start, and end
+                start_time_str = event[1]
+                end_time_str = event[2]
+
+                start_min = time_to_minutes(start_time_str)
+                end_min = time_to_minutes(end_time_str)
+
+                if start_min is not None and end_min is not None:
+                    # Handle cases where end time might be on the next day (e.g., 23:00 -> 01:00)
+                    if end_min < start_min:
+                        duration = (24 * 60 - start_min) + end_min
+                    else:
+                        duration = end_min - start_min
+                    durations.append(duration)
+                    start_times.append(start_min)
+                    end_times.append(end_min)
+
+
+    # Average duration
+    avg_dur = np.mean(durations) if durations else 0
+    avg_durations.append(avg_dur)
+
+    # Day span
+    day_span = 0
+    if start_times and end_times:
+        min_start = min(start_times)
+        max_end = max(end_times)
+        # Consider day span across midnight if necessary - assuming events are within a 24h period for simplicity here
+        # A more robust solution might need to handle dates
+        day_span = max_end - min_start
+
+
+    day_spans.append(day_span)
+
+
+# Step 4: Create a new DataFrame with the calculated features and optimal score
+df_features = pd.DataFrame({
+    'num_events': num_events,
+    'num_priority': num_priority,
+    'avg_durations': avg_durations,
+    'day_spans': day_spans,
+    "optimal_score": df["optimal_score"] # Include the optimal score
+})
+
+# Step 5: Separate features (X) and target variable (y)
+X = df_features.drop('optimal_score', axis=1)
+y = df_features['optimal_score']
+
+# Display the first few rows of X and y to verify
+display(X.head())
+display(y.head())
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("Shape of X_train:", X_train.shape)
+print("Shape of X_test:", X_test.shape)
+print("Shape of y_train:", y_train.shape)
+print("Shape of y_test:", y_test.shape)
+
+from sklearn.linear_model import LinearRegression
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Make predictions on the testing data
+y_pred = model.predict(X_test)
+
+# Calculate evaluation metrics
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+# Print the evaluation metrics
+print(f"Mean Absolute Error (MAE): {mae:.2f}")
+print(f"Mean Squared Error (MSE): {mse:.2f}")
+print(f"R-squared (R2) Score: {r2:.2f}")
+
+from sklearn.ensemble import RandomForestRegressor
+
+# Initialize and train the RandomForestRegressor model
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+import pandas as pd
+import ast
+from datetime import timedelta
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+
+# Step 1: Load dataset
+df = pd.read_parquet("hf://datasets/xhlin0601/events-scheduling/data/train-00000-of-00001.parquet")
+
+# Step 2: Preprocess event lists
+def parse_events(event_data):
+    """Convert numpy array of numpy arrays into a Python list of lists."""
+    if isinstance(event_data, np.ndarray):
+        # Convert outer numpy array to a list, and each inner numpy array to a list
+        return [list(item) for item in event_data]
+    elif isinstance(event_data, str):
+        # Fallback for string format
+        try:
+            return ast.literal_eval(event_data)
+        except (ValueError, SyntaxError):
+            print(f"Could not parse string data: {event_data}")
+            return [] # Return empty list or handle error as appropriate
+    else:
+        # Handle other potential types if necessary, or return empty list
+        print(f"Unexpected data type: {type(event_data)}")
+        return []
+
+# Apply the parsing function
+df['parsed_events'] = df['events'].apply(lambda x: parse_events(x))
+df['parsed_priorities'] = df['priority_events'].apply(lambda x: parse_events(x))
+
+# Helper: convert time strings to minutes
+def time_to_minutes(time_str):
+    if isinstance(time_str, str):
+        try:
+            h, m = map(int, time_str.split(':'))
+            return h * 60 + m
+        except ValueError:
+            print(f"Could not parse time string: {time_str}")
+            return None # Handle cases where time string is invalid
+    return None # Handle non-string inputs
+
+
+# Step 3: Calculate requested features
+num_events = []
+avg_durations = []
+num_priority = []
+day_spans = []
+
+for index, row in df.iterrows():
+    events = row['parsed_events']
+    priority_events = row['parsed_priorities']
+
+    # Number of events
+    num_e = len(events) if isinstance(events, list) else 0
+    num_events.append(num_e)
+
+    # Number of priority events
+    num_p = len(priority_events) if isinstance(priority_events, list) else 0
+    num_priority.append(num_p)
+
+    # Calculate durations, start times, and end times
+    durations = []
+    start_times = []
+    end_times = []
+
+    if isinstance(events, list):
+        for event in events:
+            if isinstance(event, list) and len(event) >= 3: # Ensure event has name, start, and end
+                start_time_str = event[1]
+                end_time_str = event[2]
+
+                start_min = time_to_minutes(start_time_str)
+                end_min = time_to_minutes(end_time_str)
+
+                if start_min is not None and end_min is not None:
+                    # Handle cases where end time might be on the next day (e.g., 23:00 -> 01:00)
+                    if end_min < start_min:
+                        duration = (24 * 60 - start_min) + end_min
+                    else:
+                        duration = end_min - start_min
+                    durations.append(duration)
+                    start_times.append(start_min)
+                    end_times.append(end_min)
+
+
+    # Average duration
+    avg_dur = np.mean(durations) if durations else 0
+    avg_durations.append(avg_dur)
+
+    # Day span
+    day_span = 0
+    if start_times and end_times:
+        min_start = min(start_times)
+        max_end = max(end_times)
+        # Consider day span across midnight if necessary - assuming events are within a 24h period for simplicity here
+        # A more robust solution might need to handle dates
+        day_span = max_end - min_start
+
+
+    day_spans.append(day_span)
+
+
+# Step 4: Create a new DataFrame with the calculated features and optimal score
+df_features = pd.DataFrame({
+    'num_events': num_events,
+    'num_priority': num_priority,
+    'avg_durations': avg_durations,
+    'day_spans': day_spans,
+    "optimal_score": df["optimal_score"] # Include the optimal score
+})
+
+# Step 5: Separate features (X) and target variable (y)
+X = df_features.drop('optimal_score', axis=1)
+y = df_features['optimal_score']
+
+# Step 6: Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 7: Initialize and train the RandomForestRegressor model
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+display(X_train.head())
+display(y_train.head())
+
+
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Make predictions on the testing data
+y_pred_rf = rf_model.predict(X_test)
+
+# Calculate evaluation metrics for RandomForestRegressor
+mae_rf = mean_absolute_error(y_test, y_pred_rf)
+mse_rf = mean_squared_error(y_test, y_pred_rf)
+r2_rf = r2_score(y_test, y_pred_rf)
+
+# Print the evaluation metrics
+print(f"Random Forest Regressor - Mean Absolute Error (MAE): {mae_rf:.2f}")
+print(f"Random Forest Regressor - Mean Squared Error (MSE): {mse_rf:.2f}")
+print(f"Random Forest Regressor - R-squared (R2) Score: {r2_rf:.2f}")
+
+import joblib
+joblib.dump(model, 'schedule_model.pk1')
