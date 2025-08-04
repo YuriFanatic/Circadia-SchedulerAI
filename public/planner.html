@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Planner | Circadia SchedulerAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #181f2a;
+      color: #fff;
+      margin: 0;
+      min-height: 100vh;
+    }
+    .planner-container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 32px 0;
+    }
+    .planner-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .planner-header h1 {
+      font-size: 2rem;
+      margin: 0 0 8px 0;
+    }
+    .planner-header p {
+      color: #b0b8c1;
+      font-size: 1rem;
+      margin: 0 0 16px 0;
+    }
+    .calendar-btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: background 0.2s;
+    }
+    .calendar-btn:hover {
+      background: #2563eb;
+    }
+    .day-label {
+      color: #b0b8c1;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .schedule {
+      background: #232b3a;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      position: relative;
+      max-height: 480px;
+      overflow-y: auto;
+      /* For better appearance on small screens, you can adjust max-height as needed */
+    }
+    .time-slot {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #2d3748;
+      min-height: 40px;
+      position: relative;
+    }
+    .time-label {
+      width: 50px;
+      color: #6b7280;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .slot-content {
+      flex: 1;
+      min-height: 36px;
+      position: relative;
+    }
+    .task {
+      background: #22c55e;
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 12px;
+      margin: 2px 0;
+      font-size: 1rem;
+      cursor: grab;
+      display: inline-block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(34,197,94,0.15);
+      transition: box-shadow 0.2s;
+    }
+    .task.dragging {
+      opacity: 0.7;
+      box-shadow: 0 4px 16px rgba(59,130,246,0.25);
+    }
+    .slot-content.drag-over {
+      background: #334155;
+      border-radius: 6px;
+    }
+    .todo-list {
+      background: #232b3a;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .todo-list h2 {
+      font-size: 1.1rem;
+      margin: 0 0 12px 0;
+      color: #b0b8c1;
+    }
+    .todo-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .todo-input-row input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+    .todo-input-row button {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .todo-input-row button:hover {
+      background: #2563eb;
+    }
+    .todo-items {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .todo-item {
+      background: #334155;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+      font-size: 1rem;
+    }
+    .todo-item.completed {
+      text-decoration: line-through;
+      color: #94a3b8;
+      background: #232b3a;
+    }
+    .todo-item button {
+      background: none;
+      border: none;
+      color: #f87171;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .nav-link {
+      color: #60a5fa;
+      text-decoration: underline;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="planner-container">
+    <div class="planner-header">
+      <h1>Planner</h1>
+      <p>Drag, drop, get it done. Schedule your to-dos on your calendar and make time for what truly matters.</p>
+      <button class="calendar-btn" onclick="alert('Calendar integration coming soon!')">Connect a calendar</button>
+      <div class="nav-link"><a href="chat_bot.html" style="color:#60a5fa;">← Back to Chatbot</a></div>
+    </div>
+    <div class="day-label" id="day-label"></div>
+    <div class="schedule" id="schedule"></div>
+    <div id="trash-zone" style="width:100%;height:48px;background:#1e293b;color:#f87171;display:flex;align-items:center;justify-content:center;border-radius:12px;margin-bottom:18px;font-size:1.1rem;opacity:0.85;cursor:pointer;user-select:none;">
+      🗑️ Drag here to delete task
+    </div>
+    <div class="todo-list">
+      <h2>To-Do List</h2>
+      <div class="todo-input-row">
+        <input type="text" id="todo-input" placeholder="Add a new task...">
+        <button onclick="addTodo()">Add</button>
+      </div>
+      <ul class="todo-items" id="todo-items"></ul>
+    </div>
+  </div>
+  <script>
+    // --- Scheduler ---
+    // Generate all 24 hours in 12-hour format
+    const hours = [];
+    for (let h = 0; h < 24; h++) {
+      let period = h < 12 ? 'am' : 'pm';
+      let hour12 = h % 12 === 0 ? 12 : h % 12;
+      hours.push(`${hour12}${period}`);
+    }
+    const schedule = document.getElementById('schedule');
+    const dayLabel = document.getElementById('day-label');
+    const today = new Date();
+    dayLabel.textContent = today.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
+    // Load tasks from localStorage
+    // scheduledTasks: { hour: { text, duration } }
+    let scheduledTasks = JSON.parse(localStorage.getItem('scheduledTasks') || '{}');
+    let todoList = JSON.parse(localStorage.getItem('todoList') || '[]');
+
+    function renderSchedule() {
+      schedule.innerHTML = '';
+      for (let i = 0; i < hours.length; i++) {
+        const hour = hours[i];
+        const slot = document.createElement('div');
+        slot.className = 'time-slot';
+        slot.dataset.hour = hour;
+        slot.innerHTML = `<div class="time-label">${hour}</div><div class="slot-content" data-hour="${hour}"></div>`;
+        schedule.appendChild(slot);
+
+        // Render scheduled task if exists and is the starting hour
+        const slotContent = slot.querySelector('.slot-content');
+        const taskObj = scheduledTasks[hour];
+        if (taskObj && (!taskObj.rendered)) {
+          const duration = taskObj.duration || 1;
+          const taskDiv = document.createElement('div');
+          taskDiv.className = 'task';
+          taskDiv.textContent = duration > 1 ? `${taskObj.text} (${duration}h)` : taskObj.text;
+          taskDiv.draggable = true;
+          taskDiv.style.height = `${duration * 40 - 4}px`;
+          taskDiv.style.position = 'absolute';
+          taskDiv.style.top = '0';
+          taskDiv.style.left = '0';
+          taskDiv.style.right = '0';
+          taskDiv.style.zIndex = 2;
+          taskDiv.addEventListener('dragstart', onDragStart);
+          taskDiv.addEventListener('dragend', onDragEnd);
+          // data attributes for task text and start hour
+          taskDiv.dataset.taskText = taskObj.text;
+          taskDiv.dataset.startHour = hour;
+          slotContent.appendChild(taskDiv);
+          // Mark subsequent slots as rendered for this task
+          for (let d = 0; d < duration; d++) {
+            if (i + d < hours.length) {
+              if (d > 0) scheduledTasks[hours[i + d]] = { rendered: true };
+            }
+          }
+        }
+        // Drag events for slot
+        slotContent.addEventListener('dragover', onDragOver);
+        slotContent.addEventListener('drop', onDrop);
+        slotContent.addEventListener('dragleave', onDragLeave);
+      }
+      // Clean up rendered flags
+      for (let h in scheduledTasks) {
+        if (scheduledTasks[h] && scheduledTasks[h].rendered) delete scheduledTasks[h];
+      }
+    }
+    // --- Trash Zone Logic ---
+    const trashZone = document.getElementById('trash-zone');
+    trashZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      trashZone.style.background = '#991b1b';
+      trashZone.style.opacity = 1;
+    });
+    trashZone.addEventListener('dragleave', function(e) {
+      trashZone.style.background = '#1e293b';
+      trashZone.style.opacity = 0.85;
+    });
+    trashZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      trashZone.style.background = '#1e293b';
+      trashZone.style.opacity = 0.85;
+      const type = e.dataTransfer.getData('type');
+      if (type === 'task') {
+        const taskText = e.dataTransfer.getData('taskText');
+        const startHour = e.dataTransfer.getData('startHour');
+        if (taskText && startHour) {
+          const taskObj = scheduledTasks[startHour];
+          if (taskObj && taskObj.text === taskText) {
+            const duration = taskObj.duration || 1;
+            let idx = hours.indexOf(startHour);
+            for (let d = 0; d < duration; d++) {
+              if (idx + d < hours.length) delete scheduledTasks[hours[idx + d]];
+            }
+            saveSchedule();
+            renderSchedule();
+          }
+        }
+      }
+    });
+
+    // --- To-Do List ---
+    function renderTodoList() {
+      const todoItems = document.getElementById('todo-items');
+      todoItems.innerHTML = '';
+      todoList.forEach((item, idx) => {
+        const li = document.createElement('li');
+        li.className = 'todo-item' + (item.completed ? ' completed' : '');
+        li.draggable = true;
+        li.addEventListener('dragstart', function(e) { window.onTodoDragStart(e, idx); });
+        li.innerHTML = `
+          <span>${item.text}</span>
+          <div>
+            <button onclick="toggleTodo(${idx})">&#10003;</button>
+            <button onclick="removeTodo(${idx})">&times;</button>
+          </div>
+        `;
+        todoItems.appendChild(li);
+      });
+    }
+
+    function addTodo() {
+      const input = document.getElementById('todo-input');
+      const text = input.value.trim();
+      if (text) {
+        todoList.push({ text, completed: false });
+        input.value = '';
+        saveTodoList();
+        renderTodoList();
+      }
+    }
+    function removeTodo(idx) {
+      todoList.splice(idx, 1);
+      saveTodoList();
+      renderTodoList();
+    }
+    function toggleTodo(idx) {
+      todoList[idx].completed = !todoList[idx].completed;
+      saveTodoList();
+      renderTodoList();
+    }
+    function saveTodoList() {
+      localStorage.setItem('todoList', JSON.stringify(todoList));
+    }
+
+    // --- Drag & Drop Logic ---
+
+    // Use DataTransfer to distinguish between task and todo
+    function onDragStart(e) {
+      const isTask = e.target.classList.contains('task');
+      if (isTask) {
+        e.dataTransfer.setData('type', 'task');
+        e.dataTransfer.setData('taskText', e.target.dataset.taskText);
+        e.dataTransfer.setData('startHour', e.target.dataset.startHour);
+        setTimeout(() => e.target.classList.add('dragging'), 0);
+      }
+    }
+    function onDragEnd(e) {
+      e.target.classList.remove('dragging');
+    }
+    function onDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+    function onDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    function onDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      const hour = e.currentTarget.dataset.hour;
+      const type = e.dataTransfer.getData('type');
+      let duration = 1;
+      if (type === 'task') {
+        const taskText = e.dataTransfer.getData('taskText');
+        const startHour = e.dataTransfer.getData('startHour');
+        if (taskText && startHour) {
+          const taskObj = scheduledTasks[startHour];
+          if (taskObj && taskObj.text === taskText) {
+            const prevDuration = taskObj.duration || 1;
+            let idx = hours.indexOf(startHour);
+            for (let d = 0; d < prevDuration; d++) {
+              if (idx + d < hours.length) delete scheduledTasks[hours[idx + d]];
+            }
+            duration = parseInt(prompt('How many hours should this task last?', prevDuration), 10);
+            if (!duration || duration < 1) duration = 1;
+            scheduledTasks[hour] = { text: taskText, duration };
+            saveSchedule();
+            renderSchedule();
+          }
+        }
+      } else if (type === 'todo') {
+        // Find and remove from todoList
+        const todoText = e.dataTransfer.getData('text/plain');
+        const idx = todoList.findIndex(item => item.text === todoText && !item.completed);
+        if (idx !== -1) {
+          duration = parseInt(prompt('How many hours should this task last?', 1), 10);
+          if (!duration || duration < 1) duration = 1;
+          scheduledTasks[hour] = { text: todoList[idx].text, duration };
+          todoList.splice(idx, 1);
+          saveSchedule();
+          saveTodoList();
+          renderSchedule();
+          renderTodoList();
+        }
+      }
+    }
+    // For dragging from todo list
+    window.onTodoDragStart = function(e, idx) {
+      e.dataTransfer.setData('type', 'todo');
+      e.dataTransfer.setData('text/plain', todoList[idx].text);
+    };
+
+    function saveSchedule() {
+      localStorage.setItem('scheduledTasks', JSON.stringify(scheduledTasks));
+    }
+
+    // --- Initial Render ---
+    renderSchedule();
+    renderTodoList();
+
+    // Allow pressing Enter to add todo
+    document.getElementById('todo-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTodo();
+    });
+  </script>
+</body>
+</html>
