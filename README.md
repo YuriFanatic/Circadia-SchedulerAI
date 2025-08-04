@@ -2,7 +2,7 @@ TO SET UP:
 
 install mySQL and get the connection running
 
-paste this into the query box and run:
+paste this into the query box and run: <br>
 USE user_demo;
 
 CREATE TABLE users (
@@ -31,8 +31,8 @@ CREATE TABLE chat_messages (
 
 change the password inside server317.js into your mySQL password
 
-run these commands in your repository terminal:
-npm install
+run these commands in your repository terminal: <br>
+npm install <br>
 node server317.js
 
 the website should be running at http://localhost:3000/
