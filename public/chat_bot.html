@@ -53,12 +53,14 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     .menu-button span {
-      display: block;
-      width: 24px;
-      height: 3px;
-      background: #2e7d32;
-      margin: 3px 0;
-      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: none;
+      margin: 0;
+      padding: 0;
     }
     .customization-box {
       display: none;
@@ -301,9 +303,7 @@
     </div>
     <div class="menu-container">
       <button class="menu-button" onclick="toggleCustomizationBox()">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span style="font-size:1.5rem;">⚙️</span>
       </button>
       <div class="customization-box" id="customization-box">
         <h4>Settings</h4>
@@ -343,7 +343,7 @@
         </div>
       </div>
       <div class="user-input">
-        <img src="/images/user_avatar.png" alt="User">
+        <span style="font-size:2rem;display:inline-block;vertical-align:middle;">👤</span>
         <input type="text" id="user-input" placeholder="Type your health question or appointment request...">
         <button id="send-button">Send</button>
       </div>
