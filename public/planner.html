@@ -237,7 +237,23 @@
           taskDiv.className = 'task';
           taskDiv.textContent = duration > 1 ? `${taskObj.text} (${duration}h)` : taskObj.text;
           taskDiv.draggable = true;
-          taskDiv.style.height = `${duration * 40 - 4}px`;
+          // Alternate color based on a colorIndex property
+          const colorPalette = [
+            '#22c55e', // green
+            '#3b82f6', // blue
+            '#f59e42', // orange
+            '#eab308', // yellow
+            '#a855f7', // purple
+            '#ef4444', // red
+            '#14b8a6', // teal
+            '#f472b6'  // pink
+          ];
+          let colorIdx = 0;
+          if (typeof taskObj.colorIdx === 'number') {
+            colorIdx = taskObj.colorIdx % colorPalette.length;
+          }
+          taskDiv.style.background = colorPalette[colorIdx];
+          taskDiv.style.height = `${duration * 40 - 25}px`;
           taskDiv.style.position = 'absolute';
           taskDiv.style.top = '0';
           taskDiv.style.left = '0';
@@ -385,7 +401,9 @@
             }
             duration = parseInt(prompt('How many hours should this task last?', prevDuration), 10);
             if (!duration || duration < 1) duration = 1;
-            scheduledTasks[hour] = { text: taskText, duration };
+            // Keep colorIdx if present
+            let colorIdx = (typeof taskObj.colorIdx === 'number') ? taskObj.colorIdx : getNextColorIdx();
+            scheduledTasks[hour] = { text: taskText, duration, colorIdx };
             saveSchedule();
             renderSchedule();
           }
@@ -397,7 +415,9 @@
         if (idx !== -1) {
           duration = parseInt(prompt('How many hours should this task last?', 1), 10);
           if (!duration || duration < 1) duration = 1;
-          scheduledTasks[hour] = { text: todoList[idx].text, duration };
+          // Assign a color index and increment for next
+          let colorIdx = getNextColorIdx();
+          scheduledTasks[hour] = { text: todoList[idx].text, duration, colorIdx };
           todoList.splice(idx, 1);
           saveSchedule();
           saveTodoList();
@@ -405,6 +425,13 @@
           renderTodoList();
         }
       }
+    // Helper to get and increment color index in localStorage
+    function getNextColorIdx() {
+      let idx = parseInt(localStorage.getItem('colorIdx') || '0', 10);
+      if (isNaN(idx)) idx = 0;
+      localStorage.setItem('colorIdx', ((idx + 1) % 8).toString());
+      return idx;
+    }
     }
     // For dragging from todo list
     window.onTodoDragStart = function(e, idx) {
